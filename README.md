@@ -35,6 +35,97 @@ You will need the following things properly installed on your computer.
 "# poll-with-ember" 
 # Technical Details
 
+## HomePage
+`Templates/index.hbs` contains the code for the homepage view.
+When the question and answer choices are given and once the submit is clicked `createPoll` action is triggered. 
+
+    <form class="form" {{action "createPoll" model on="submit"}}>
+        <fieldset class="form-field">
+            <label class="form-label" for="question">Question</label>
+            {{input class="form-input" id="question" type="text" value=model.prompt}}
+        </fieldset>
+
+        {{#each model.options as |option|}}
+        <fieldset class="form-field">
+            <label class="form-label">Option</label>
+            {{input class="form-input" type="text" value=option.label}}
+        </fieldset>
+        {{/each}}
+
+        <button class="btn btn--primary btn--form" type="submit">Submit!</button>
+    </form>
+
+The `app/routes/index.js` file has the code for action-
+
+    actions: {
+        createPoll(poll) {
+        this.get('store').savePoll(poll);
+        this.transitionTo('polls.poll', poll);
+    }
+    
+The `action` calls the `savePoll` method which is in `services/store.js`.
+
+## Central Data Repository
+
+We generated a new Ember service as `services/store.js` to create a data repository for our application.
+All the three model - `poll`, `option` and `vote` are imported to form this central repository.
+
+The predefined polls are declared and defined in an array as two objects. 
+
+The `service` extends the following methods-
+1. `createPoll` - Responsible for creating a new poll and also the options provided in the homepage.
+2. `createVote` - It takes a parameter as poll and creates a vote object when the vote is casted.
+3. `findAllPolls` - It return all the available polls.
+4. `findPoll` - It takes a parameter as `id` and return a particular `poll` object with the given `id`.
+5. `savePoll` - It takes a parameter poll and pushes the poll in the `polls` array.
+6. `saveVote` - It takes a paramter as `vote` and saves the vote with its respective poll.
+
+## Components 
+
+We used a component for calculating percentage for votes that are casted. The file `option-tally.js` has the component code. The `percentage` is the computed property, which divides particular option's votes with total number of votes with that poll.
+
+    export default Ember.Component.extend({
+        percentage: Ember.computed('option.voteCount', 'poll.voteCount', function() {
+            const pollVoteCount = this.get('poll.voteCount');
+
+            if (pollVoteCount <= 0) {
+                return 0;
+            } else {
+                return this.get('option.voteCount') / this.get('poll.voteCount');
+            }
+        })
+    });
+
+## Models
+We used three models for the application namely `option`, `poll` and `vote`.
+
+1. `option`
+
+        export default Ember.Object.extend({
+            voteCount: Ember.computed('poll.votes.[].option', function() {
+                return this.get('poll.votes').filterBy('option', this).length;
+            })
+        });
+
+2. `poll`
+
+        export default Ember.Object.extend({
+            optionsSorting: ['voteCount:desc'],
+            sortedOptions: Ember.computed.sort('options', 'optionsSorting'),
+            voteCount: Ember.computed.alias('votes.length')
+        });
+
+3. `vote`
+
+        export default Ember.Object.extend({
+            toggleOption(option) {
+                if (this.get('option') === option) {
+                    option = null;
+                }
+                this.set('option', option);
+            }
+        });
+
 # User Manual
 ##### Step1:
 *	Launch the web page. The webpage will look like the screen shot below.
