@@ -1,0 +1,19 @@
+<header class="header">
+  <h2>Welcome, Ember beginners!</h2>
+  <p>You can create a new poll here.</p>
+</header>
+
+{{outlet}} {{! here poll.hbs will be rendered because it is the child of this polls.hbs --}}
+
+<footer class="footer">
+  <h4>Check Out Previous Polls from Ember beginners:</h4>
+  <ul class="list list--space">
+    {{#each model as |poll|}}
+      <li class="list-item">{{#link-to "polls.poll" poll}}{{poll.prompt}}{{/link-to}}</li>
+    {{/each}}
+  </ul>
+
+  <p class="footer-copyright">
+    <span class="footer-copyright-text">&copy; Poll with Ember</span>
+  </p>
+</footer>
